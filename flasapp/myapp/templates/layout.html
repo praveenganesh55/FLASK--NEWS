@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title>NEWS On Your Lap</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static',filename='bootstrap.css') }}">
   </head>
   <body>
     {% include 'includes/_navbar.html' %}
@@ -12,7 +12,7 @@
       {% block body %}{% endblock %}
     </div>
 
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static',filename='bootstrap.js') }}"></script>
     <script src="//cdn.ckeditor.com/4.6.2/basic/ckeditor.js"></script>
     <script type="text/javascript">
       CKEDITOR.replace('editor')
