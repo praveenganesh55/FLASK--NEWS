@@ -1,22 +1,9 @@
+from myapp import app
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
 from flask_mysqldb import MySQL
-from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from newsapi import NewsApiClient
-
-
-
-app = Flask(__name__)
-
-# Config MySQL
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'password'
-app.config['MYSQL_DB'] = 'mysqlapp'
-app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
-# init MYSQL
-mysql = MySQL(app)
-
+from .models import RegisterForm
 @app.route('/')
 def index():
     return render_template('home.html')
@@ -25,17 +12,8 @@ def index():
 def about():
     return render_template('about.html')
 
-class RegisterForm(Form):
-    name = StringField('Name',[validators.length(min=2,max=50)])
-    username = StringField('UserName', [validators.length(min=4, max=25)])
-    email = StringField('Email', [validators.length(min=6, max=50)])
-    password= PasswordField('Password',[
-        validators.DataRequired(),
-        validators.EqualTo('confirm', message='Passwords do not match')
-    ])
-    confirm = PasswordField('Confirm Password')
-
-@app.route('/register',methods=['GET','POST'])
+mysql=MySQL(app)
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
@@ -46,7 +24,8 @@ def register():
 
         cur = mysql.connection.cursor()
 
-        cur.execute("INSERT INTO users(name, email, username, password) VALUES( %s, %s, %s, %s)", (name,email,username,password))
+        cur.execute("INSERT INTO users(name, email, username, password) VALUES( %s, %s, %s, %s)",
+                    (name, email, username, password))
 
         mysql.connection.commit()
 
@@ -54,38 +33,44 @@ def register():
 
         flash('REGISTERED SUCESSFULLY', 'success')
 
-        
     return render_template('register.html', form=form)
 
-@app.route('/login',methods=['GET','POST'])
+
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password_candidate = request.form['password']
 
-        cur = mysql.connection.cursor()
+        cur =mysql.connection.cursor()
 
         result = cur.execute("SELECT * FROM users WHERE username = %s", [username])
 
         if result > 0:
-         data = cur.fetchone()
-         password = data['password']
+            data = cur.fetchone()
+            password = data['password']
 
-         if sha256_crypt.verify(password_candidate,password):
+            if sha256_crypt.verify(password_candidate, password):
                 app.logger.info('password matched')
-                session['logged_in']= True
+                session['logged_in'] = True
                 session['username'] = username
 
-                flash('You are now logged in','success')
+                flash('You are now logged in', 'success')
                 return redirect(url_for('dashboard'))
-         else:
-             error = 'wrong password'
-             return render_template('login.html', error=error)
-         cur.close()
+            else:
+                error = 'wrong password'
+                return render_template('login.html', error=error)
+            cur.close()
         else:
-            error='username not found'
-            return render_template('login.html',error=error)
+            error = 'username not found'
+            return render_template('login.html', error=error)
     return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('you are now logged out','success')
+    return redirect(url_for('login'))
 
 @app.route('/dashboard')
 def dashboard():
@@ -109,12 +94,6 @@ def dashboard():
 
         mylist=zip(news,desc,img,link)
     return render_template('dashboard.html',context=mylist)
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash('you are now logged out','success')
-    return redirect(url_for('login'))
 
 @app.route('/sports')
 def sports():
@@ -241,10 +220,3 @@ def result():
             return render_template('all.html',context=mylist)
     if count<1:
         return render_template('result.html')
-
-
-
-
-if __name__=='__main__':
-    app.secret_key='secret123'
-    app.run(debug=True)
