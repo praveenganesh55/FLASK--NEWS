@@ -103,6 +103,8 @@ def sports():
     top_headlines = newsapi.get_top_headlines(category='sports',language='en',country='in')
 
     articles = top_headlines['articles']
+    request=len(articles)
+    app.logger.info(request)
 
     desc = []
     news = []
