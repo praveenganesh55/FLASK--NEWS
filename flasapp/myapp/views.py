@@ -102,6 +102,7 @@ def sports():
 
     top_headlines = newsapi.get_top_headlines(category='sports',language='en',country='in')
 
+
     articles = top_headlines['articles']
     request=len(articles)
     app.logger.info(request)
@@ -118,8 +119,11 @@ def sports():
         img.append(myarticle['urlToImage'])
         link.append(myarticle['url'])
 
-        mylist = zip(news, desc, img, link)
+
+
+    mylist = zip(news, desc, img, link)
     return render_template('all.html', context=mylist)
+
 
 @app.route('/business')
 def business():
@@ -198,7 +202,8 @@ def search():
 def result():
     text = request.form['u']
     newsapi = NewsApiClient(api_key='ead22b56ea9548bb962ea7a6806a3ba0')
-    all_articles = newsapi.get_top_headlines(language='en')
+    #all_articles = newsapi.get_top_headlines(language='en')
+    all_articles = newsapi.get_everything(q=text,language='en')
 
     articles = all_articles["articles"]
 
@@ -211,6 +216,7 @@ def result():
     for i in range(len(articles)):
         myarticle = articles[i]
         mystring = myarticle['description']
+        print(mystring)
         if text in mystring :
             count=count+1
             news.append(myarticle['title'])
@@ -220,6 +226,6 @@ def result():
 
             mylist=zip(news, desc, img, link)
 
-            return render_template('all.html',context=mylist)
+    return render_template('all.html',context=mylist)
     if count<1:
         return render_template('result.html')
