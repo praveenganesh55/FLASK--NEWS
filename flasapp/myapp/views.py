@@ -4,6 +4,12 @@ from flask_mysqldb import MySQL
 from passlib.hash import sha256_crypt
 from newsapi import NewsApiClient
 from .models import RegisterForm
+from flask_paginate import Pagination, get_page_args
+users = list(range(40))
+
+
+def get_users(offset=0, per_page=4):
+    return users[offset: offset + per_page]
 @app.route('/')
 def index():
     return render_template('home.html')
@@ -100,13 +106,18 @@ def dashboard():
 def sports():
     newsapi = NewsApiClient(api_key='ead22b56ea9548bb962ea7a6806a3ba0')
 
-    top_headlines = newsapi.get_top_headlines(category='sports',language='en',country='in')
+    p, per_page, offset = get_page_args(page_parameter='page',
+                                        per_page_parameter='per_page')
+    total = len(users)
+    pagination_users = get_users(offset=offset, per_page=per_page)
+    pagination = Pagination(page=p, per_page=per_page, total=total,
+                            css_framework='bootstrap4')
 
+    top_headlines = newsapi.get_top_headlines(category='sports', language='en', country='in', page=p, page_size=10)
 
     articles = top_headlines['articles']
-    request=len(articles)
-    app.logger.info(request)
-
+    app.logger.info(len(articles))
+    print(len(articles))
     desc = []
     news = []
     img = []
@@ -119,20 +130,30 @@ def sports():
         img.append(myarticle['urlToImage'])
         link.append(myarticle['url'])
 
-
-
-    mylist = zip(news, desc, img, link)
-    return render_template('all.html', context=mylist)
+        mylist = zip(news, desc, img, link)
+    return render_template('all.html', context=mylist, users=pagination_users,
+                           page=p,
+                           per_page=per_page,
+                           pagination=pagination, )
 
 
 @app.route('/business')
 def business():
     newsapi = NewsApiClient(api_key='ead22b56ea9548bb962ea7a6806a3ba0')
 
-    top_headlines = newsapi.get_top_headlines(category='business',language='en',country='in')
+
+    p, per_page, offset = get_page_args(page_parameter='page',
+                                           per_page_parameter='per_page')
+    total = len(users)
+    pagination_users = get_users(offset=offset, per_page=per_page)
+    pagination = Pagination(page=p, per_page=per_page, total=total,
+                            css_framework='bootstrap4')
+
+    top_headlines = newsapi.get_top_headlines(category='business', language='en', country='in', page=p,page_size=10)
 
     articles = top_headlines['articles']
-
+    app.logger.info(len(articles))
+    print(len(articles))
     desc = []
     news = []
     img = []
@@ -146,16 +167,28 @@ def business():
         link.append(myarticle['url'])
 
         mylist = zip(news, desc, img, link)
-    return render_template('all.html', context=mylist)
+    return render_template('all.html', context=mylist,users=pagination_users,
+                           page=p,
+                           per_page=per_page,
+                           pagination=pagination,)
+
 
 @app.route('/entertainment')
 def entertainment():
     newsapi = NewsApiClient(api_key='ead22b56ea9548bb962ea7a6806a3ba0')
 
-    top_headlines = newsapi.get_top_headlines(category='entertainment',language='en',country='in')
+    p, per_page, offset = get_page_args(page_parameter='page',
+                                        per_page_parameter='per_page')
+    total = len(users)
+    pagination_users = get_users(offset=offset, per_page=per_page)
+    pagination = Pagination(page=p, per_page=per_page, total=total,
+                            css_framework='bootstrap4')
+
+    top_headlines = newsapi.get_top_headlines(category='entertainment', language='en', country='in', page=p, page_size=10)
 
     articles = top_headlines['articles']
-
+    app.logger.info(len(articles))
+    print(len(articles))
     desc = []
     news = []
     img = []
@@ -169,16 +202,29 @@ def entertainment():
         link.append(myarticle['url'])
 
         mylist = zip(news, desc, img, link)
-    return render_template('all.html', context=mylist)
+    return render_template('all.html', context=mylist, users=pagination_users,
+                           page=p,
+                           per_page=per_page,
+                           pagination=pagination, )
+
 
 @app.route('/technology')
 def technology():
     newsapi = NewsApiClient(api_key='ead22b56ea9548bb962ea7a6806a3ba0')
 
-    top_headlines = newsapi.get_top_headlines(category='technology',language='en',country='in')
+
+    p, per_page, offset = get_page_args(page_parameter='page',
+                                           per_page_parameter='per_page')
+    total = len(users)
+    pagination_users = get_users(offset=offset, per_page=per_page)
+    pagination = Pagination(page=p, per_page=per_page, total=total,
+                            css_framework='bootstrap4')
+
+    top_headlines = newsapi.get_top_headlines(category='technology', language='en', country='in', page=p,page_size=10)
 
     articles = top_headlines['articles']
-
+    app.logger.info(len(articles))
+    print(len(articles))
     desc = []
     news = []
     img = []
@@ -192,7 +238,10 @@ def technology():
         link.append(myarticle['url'])
 
         mylist = zip(news, desc, img, link)
-    return render_template('all.html', context=mylist)
+    return render_template('all.html', context=mylist,users=pagination_users,
+                           page=p,
+                           per_page=per_page,
+                           pagination=pagination,)
 
 @app.route('/search')
 def search():
@@ -200,32 +249,30 @@ def search():
 
 @app.route('/search',methods=['POST'])
 def result():
-    text = request.form['u']
-    newsapi = NewsApiClient(api_key='ead22b56ea9548bb962ea7a6806a3ba0')
-    #all_articles = newsapi.get_top_headlines(language='en')
-    all_articles = newsapi.get_everything(q=text,language='en')
 
-    articles = all_articles["articles"]
+        text = request.form['u']
 
-    desc = []
-    news = []
-    img = []
-    link = []
 
-    count = 0
-    for i in range(len(articles)):
-        myarticle = articles[i]
-        mystring = myarticle['description']
-        print(mystring)
-        if text in mystring :
-            count=count+1
+        newsapi = NewsApiClient(api_key='ead22b56ea9548bb962ea7a6806a3ba0')
+
+
+        top_headlines = newsapi.get_everything(q=text, language='en', page_size=100)
+
+        articles = top_headlines['articles']
+        app.logger.info(len(articles))
+        print(len(articles))
+        desc = []
+        news = []
+        img = []
+        link = []
+
+        for i in range(len(articles)):
+            myarticle = articles[i]
             news.append(myarticle['title'])
             desc.append(myarticle['description'])
             img.append(myarticle['urlToImage'])
             link.append(myarticle['url'])
 
-            mylist=zip(news, desc, img, link)
-
-    return render_template('all.html',context=mylist)
-    if count<1:
-        return render_template('result.html')
+            mylist = zip(news, desc, img, link)
+        return render_template('result.html', context=mylist )
+      

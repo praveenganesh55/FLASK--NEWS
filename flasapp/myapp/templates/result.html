@@ -1,5 +1,15 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-<h1>THE WORD YOU SEARCHED DID NOT MATCH ANY OF THE ARTICLE</h1>
+<h1>Hello {{session.username}}</h1>
+<div class="container">
+    {% for n,d,i,l in context %}
+    <img src="{{i}}" alt="">
+    <h3>{{n}}</h3>
+    <a href="{{l}}">READ_MORE</a>
+    <p>{{d}}</p>
+    {% endfor %}
+</div>
+
+
 {% endblock %}
